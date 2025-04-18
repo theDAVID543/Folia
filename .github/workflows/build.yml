@@ -3,12 +3,12 @@ name: Patch and Build
 on:
   workflow_dispatch:          # Manual runs via UI/CLI/API
   push:
-    branches: ["**"]          # All branches
-  pull_request:
+    branches: ["**"]          # Match all branches
+  pull_request:               # CI on PRs
 
 jobs:
   build:
-    # Skip forked repo PRs from self
+    # Only run on PRs if the HEAD branch isn’t from this same repo
     if: ${{ github.event_name != 'pull_request' ||
           github.repository != github.event.pull_request.head.repo.full_name }}
     runs-on: ubuntu-latest
@@ -32,7 +32,7 @@ jobs:
       - name: Configure Git User Details
         run: |
           git config --global user.email "actions@github.com"
-          git config --global user.name "Github Actions"
+          git config --global user.name  "GitHub Actions"
 
       - name: Apply Patches
         run: ./gradlew applyPatches
@@ -44,5 +44,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: folia-jars
-          path: build/libs/*.jar
+          path: |
+            **/build/libs/*.jar
           retention-days: 5
