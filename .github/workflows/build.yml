@@ -3,47 +3,51 @@ name: Patch and Build
 on:
   workflow_dispatch:          # Manual runs via UI/CLI/API
   push:
-    branches: ["**"]          # Match all branches
+    branches: ["**"]          # All branches
   pull_request:               # CI on PRs
 
 jobs:
   build:
-    # Only run on PRs if the HEAD branch isn’t from this same repo
+    # Skip PRs from forks within the same repo
     if: ${{ github.event_name != 'pull_request' ||
           github.repository != github.event.pull_request.head.repo.full_name }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Git Repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate Gradle Wrapper
+      - name: Validate Gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Set up JDK
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
 
-      - name: Configure Git User Details
+      - name: Configure Git user
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name  "GitHub Actions"
 
-      - name: Apply Patches
+      - name: Apply Folia patches
         run: ./gradlew applyPatches
 
-      - name: Build
-        run: ./gradlew build
+      - name: Create PaperClip JAR
+        run: ./gradlew createMojmapPaperclipJar
+
+      - name: Create offline bundler JAR
+        run: ./gradlew createReobfBundlerJar
 
       - name: Upload JAR artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: folia-jars
+          name: folia-server-jars
           path: |
-            **/build/libs/*.jar
+            **/build/libs/*paperclip*.jar
+            **/build/libs/*bundler*.jar
           retention-days: 5
