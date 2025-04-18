@@ -48,6 +48,6 @@ jobs:
         with:
           name: folia-server-jars
           path: |
-            **/build/libs/*paperclip*.jar
+            **/build/libs/*.jar
             **/build/libs/*bundler*.jar
           retention-days: 5
